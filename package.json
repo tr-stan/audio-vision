@@ -1,0 +1,32 @@
+{
+  "dependencies": {
+    "express": "^4.16.4",
+    "passport": "^0.4.0",
+    "passport-spotify": "^1.0.1"
+  },
+  "name": "spotify-track-visualizer",
+  "description": "A project to fetch data from Spotify's WEB API to visualize tracks, and set up a database to store user data",
+  "version": "1.0.0",
+  "main": "index.js",
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo 'merhabalar'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tri-be/spotify-track-visualizer.git"
+  },
+  "keywords": [
+    "spotify",
+    "json",
+    "visualization",
+    "canvas",
+    "javascript"
+  ],
+  "author": "Tristan Bennett",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tri-be/spotify-track-visualizer/issues"
+  },
+  "homepage": "https://github.com/tri-be/spotify-track-visualizer#readme"
+}
