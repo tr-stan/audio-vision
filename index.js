@@ -9,8 +9,15 @@ const bodyParser = require('body-parser')
 const mongoose = require('mongoose')
 const User = require('./User')
 
+// you can get client_id and client_secret from registering your app with Spotify
+// at developer.spotofy.com/dashboard
+// then you will need to save them in a local .env file that is added to your .gitignore
 const client_id = process.env.CLIENT_ID
 const client_secret = process.env.CLIENT_SECRET
+// the url for this redirect_uri must be added (or 'whitelisted') in settings of your app
+// and needs to match exactly any uri you will be redirecting to through your auth process
+// most of the troubleshooting I did seems to state the most common issue is that
+// users include or don't include a slash at the end of their URIs. These must match exactly.
 const redirect_uri = process.env.REDIRECT_URI
 
 const port = 8888
@@ -55,13 +62,16 @@ db.once('open', function() {
                 callbackURL: 'http://localhost:8888/callback'
             },
             function(accessToken, refreshToken, expires_in, profile, done) {
+            	console.log(profile)
                 User
                 .findOneAndUpdate(
                 	{ spotifyId : profile.id },
                 	{ $set:{
+                		userName: profile.displayName,
                 		spotifyId : profile.id,
                 		accessToken: accessToken,
-                		refreshToken: refreshToken
+                		refreshToken: refreshToken,
+                		userURI: profile._json.uri
                 	  }
                 	},
                 	{ upsert:true, returnNewDocument : true },

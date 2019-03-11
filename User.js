@@ -4,7 +4,8 @@ let userSchema = mongoose.Schema({
 	userName: String,
 	spotifyId: String,
 	accessToken: String,
-	refreshToken: String
+	refreshToken: String,
+	userURI: String
 },
 {
 	collection: "Users"
