@@ -12,8 +12,10 @@
     "nodemon": "^1.18.10",
     "passport": "^0.4.0",
     "passport-spotify": "^1.0.1",
+    "promise": "^8.0.2",
     "querystring": "^0.2.0",
-    "spotify-web-api-node": "^4.0.0"
+    "spotify-web-api-node": "^4.0.0",
+    "superagent": "^4.1.0"
   },
   "name": "spotify-track-visualizer",
   "description": "A project to fetch data from Spotify's WEB API to visualize tracks, and set up a database to store user data",

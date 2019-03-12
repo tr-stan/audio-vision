@@ -1,12 +1,14 @@
-require('dotenv').config();
+require('dotenv').config()
 const app = require('express')()
 const morgan = require('morgan')
 const compression = require('compression')
 const passport = require('passport')
-const SpotifyStrategy = require('passport-spotify').Strategy;
+const SpotifyStrategy = require('passport-spotify').Strategy
+const SpotifyWebApi = require('spotify-web-api-node')
 const session = require('express-session')
 const bodyParser = require('body-parser')
 const mongoose = require('mongoose')
+const cors = require('cors')
 const User = require('./User')
 
 // you can get client_id and client_secret from registering your app with Spotify
@@ -20,12 +22,18 @@ const client_secret = process.env.CLIENT_SECRET
 // users include or don't include a slash at the end of their URIs. These must match exactly.
 const redirect_uri = process.env.REDIRECT_URI
 
+let spotifyApi = new SpotifyWebApi({
+	clientId: client_id,
+	clientSecret: client_secret,
+	redirectUri: redirect_uri
+})
+
 const port = 8888
 
 app.use(morgan('combined'))
 
 let sess = {
-    secret: 'txR6$*S@h^sqhmaU6BAqw!tJK2bxS*UR4ju$LfAj4v5UJAuobXZymGH8$*vP&tYDU7x#%eUmCmiZLP@gnmA35A5PWeNF5JhP$3@a9^r3&@!kxaw56rN4TZKW6',
+    secret: 'txR6$*S@h^sqhmaU6BAqw!t',
     cookie: {
         maxAge: 60000
     },
@@ -34,7 +42,7 @@ let sess = {
 }
 
 app.use(session(sess))
-
+app.use(cors())
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json())
 
@@ -62,7 +70,6 @@ db.once('open', function() {
                 callbackURL: 'http://localhost:8888/callback'
             },
             function(accessToken, refreshToken, expires_in, profile, done) {
-            	console.log(profile)
                 User
                 .findOneAndUpdate(
                 	{ spotifyId : profile.id },
@@ -88,6 +95,12 @@ db.once('open', function() {
     )
 
     passport.serializeUser(function(user, done) {
+    	spotifyApi.setAccessToken(user.accessToken)
+    	console.log("Serialized: " + user)
+    	userCookie = {
+    		userId : user.spotifyId,
+    		userAccsessToken : user.accessToken
+    	}
         done(null, user.id)
     })
 
@@ -100,9 +113,18 @@ db.once('open', function() {
 
     app.get(
         '/',
-        function(req, res) {
-            res.send("Hello Cosmos!")
+        function(request, response) {
+            response.send(`Hello Cosmos!`)
         })
+    app.get(
+    	'/user', (request, response) => {
+    		spotifyApi.getMe()
+    			.then(data => {
+    				console.log('Some info about the authenticated user', data.body)
+    				response.send(data.body)
+    			})
+    	}
+    	)
 
     app.get(
         '/auth/spotify',
@@ -119,10 +141,25 @@ db.once('open', function() {
         passport.authenticate('spotify', { failureRedirect: '/' }),
         function(req, res) {
             // successful authentication, redirect home
-            res.redirect('/');
+            console.log(userCookie)
+            res.redirect('http://localhost:3000/profile');
         })
 })
 
 app.listen(port, () => {
     console.log(`Listening on port ${port}`)
 })
+
+
+
+
+
+
+
+
+
+
+
+
+
+
