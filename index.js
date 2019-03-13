@@ -136,7 +136,6 @@ db.once('open', function() {
     app.post(
         '/search',
         (request, response) => {
-            console.log("MOMOMOMOMOMOMO\n", request.body.track, "\nMOMOMOMOMOMOMOMOMO")
             spotifyApi.searchTracks(request.body.track)
                 .then(data => {
                     let goodData = data.body.tracks.items.map( item => {
@@ -151,6 +150,21 @@ db.once('open', function() {
                 })
                 .catch(error => {
                     console.log('Search track error', error.name, error)
+                })
+        })
+
+    app.post(
+        '/analyze',
+        (request, response) => {
+            console.log("MIMIMIMIMIMIMIMIMI\n", request.body.id, "\nMIMIMIMIMIMIMIMIMI")
+            spotifyApi.getAudioAnalysisForTrack(request.body.id)
+                .then(data => {
+                    let analyzedBars = data.body.bars.map(bar => {
+                        console.log(bar)
+                    })
+                })
+                .catch(error => {
+                    console.log('Analysis error', error.name, error)
                 })
         })
 
