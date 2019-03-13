@@ -49,6 +49,13 @@ app.use(bodyParser.json())
 app.use(passport.initialize());
 app.use(passport.session());
 
+// ensureIsAuthenticated = (request, response, next) => {
+//     if (request.isAuthenticated()) {
+//         return next();
+//     }
+//     response.redirect('http://localhost:3000/login')
+// }
+
 mongoose.connect(`mongodb://localhost:27017/spotifeyes`, { useNewUrlParser: true })
     .then(() => {
         // console.log success message if the .connect promise returns successful (resolve)
@@ -112,37 +119,57 @@ db.once('open', function() {
     })
 
     app.get(
-        '/',
-        function(request, response) {
-            response.send(`Hello Cosmos!`)
-        })
-    app.get(
-    	'/user', (request, response) => {
+    	'/user',
+        (request, response) => {
     		spotifyApi.getMe()
     			.then(data => {
     				console.log('Some info about the authenticated user', data.body)
     				response.send(data.body)
     			})
-    	}
-    	)
+                .catch(error => {
+                    console.log('An error occurred authenticating the user', error.name, error)
+                    response.status(401)
+                    response.send(error.name)
+                })
+    	})
+
+    app.post(
+        '/search',
+        (request, response) => {
+            console.log("MOMOMOMOMOMOMO\n", request.body.track, "\nMOMOMOMOMOMOMOMOMO")
+            spotifyApi.searchTracks(request.body.track)
+                .then(data => {
+                    return data
+                //     data.body.tracks.items.map( item => {
+                //     console.log(`Track: ${item.name}\nArtist: ${item.artists[0].name}\nId: ${item.id}`);
+                // })
+                })
+                .catch(error => {
+                    console.log('Search track error', error.name, error)
+                })
+        })
 
     app.get(
         '/auth/spotify',
         passport.authenticate('spotify', {
         	scope: ['user-read-email', 'user-read-private'],
-        	showDialog: true
+            showDialog: true
         }),
-        function(req, res) {
+        function(request, response) {
             // this function should not be called due to the spotify authentication redirect
         })
 
     app.get(
         '/callback',
-        passport.authenticate('spotify', { failureRedirect: '/' }),
-        function(req, res) {
+        passport.authenticate('spotify', {
+            failureRedirect: '/' ,
+            message : 'unauthorized'
+        }),
+        function(request, response) {
             // successful authentication, redirect home
             console.log(userCookie)
-            res.redirect('http://localhost:3000/profile');
+            response.body = 'Authorized'
+            response.redirect('http://localhost:3000');
         })
 })
 
