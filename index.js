@@ -139,10 +139,15 @@ db.once('open', function() {
             console.log("MOMOMOMOMOMOMO\n", request.body.track, "\nMOMOMOMOMOMOMOMOMO")
             spotifyApi.searchTracks(request.body.track)
                 .then(data => {
-                    return data
-                //     data.body.tracks.items.map( item => {
-                //     console.log(`Track: ${item.name}\nArtist: ${item.artists[0].name}\nId: ${item.id}`);
-                // })
+                    let goodData = data.body.tracks.items.map( item => {
+                    console.log(item.name)
+                    return {
+                        track: item.name,
+                        artist: item.artists[0],
+                        id: item.id
+                    };
+                })
+                    response.send(goodData)
                 })
                 .catch(error => {
                     console.log('Search track error', error.name, error)
