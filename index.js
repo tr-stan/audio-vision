@@ -159,9 +159,13 @@ db.once('open', function() {
             console.log("MIMIMIMIMIMIMIMIMI\n", request.body.id, "\nMIMIMIMIMIMIMIMIMI")
             spotifyApi.getAudioAnalysisForTrack(request.body.id)
                 .then(data => {
-                    let analyzedBars = data.body.bars.map(bar => {
-                        console.log(bar)
+                    // let analyzedBars = data.body.bars.map(bar => {
+                    //     console.log("BAR",bar)
+                    // })
+                    let analyzedSegments = data.body.segments.map(segment => {
+                        return segment
                     })
+                    response.send(analyzedSegments)
                 })
                 .catch(error => {
                     console.log('Analysis error', error.name, error)
