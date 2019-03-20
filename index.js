@@ -39,7 +39,7 @@ let spotifyApi = new SpotifyWebApi({
 })
 
 // set port to 8888 if not specified (heroku can specify in deployment this way)
-const port = process.env.PORT || 8888
+const port = process.env.PORT
 
 app.use(morgan('combined'))
 
