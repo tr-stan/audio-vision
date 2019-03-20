@@ -21,7 +21,9 @@ const client_secret = process.env.CLIENT_SECRET
 // most of the troubleshooting I did seems to state the most common issue is that
 // users include or don't include a slash at the end of their URIs. These must match exactly.
 const redirect_uri = process.env.REDIRECT_URI
+const session_secret = process.env.SESSION_SECRET
 
+// instantiate spotify-web-api-node module/package
 let spotifyApi = new SpotifyWebApi({
 	clientId: client_id,
 	clientSecret: client_secret,
@@ -33,7 +35,7 @@ const port = 8888
 app.use(morgan('combined'))
 
 let sess = {
-    secret: 'txR6$*S@h^sqhmaU6BAqw!t',
+    secret: session_secret,
     cookie: {
         maxAge: 60000
     },
@@ -192,7 +194,7 @@ db.once('open', function() {
             // successful authentication, redirect home
             console.log(userCookie)
             response.body = 'Authorized'
-            response.redirect('http://localhost:3000');
+            response.redirect(redirect_uri);
         })
 })
 
