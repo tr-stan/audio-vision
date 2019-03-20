@@ -1,4 +1,8 @@
+// import .env variables from local environment configurations
 require('dotenv').config()
+
+// import package dependencies listed in package.json > "dependencies"
+// as well as the "User" model
 const app = require('express')()
 const morgan = require('morgan')
 const compression = require('compression')
@@ -16,11 +20,13 @@ const User = require('./User')
 // then you will need to save them in a local .env file that is added to your .gitignore
 const client_id = process.env.CLIENT_ID
 const client_secret = process.env.CLIENT_SECRET
+
 // the url for this redirect_uri must be added (or 'whitelisted') in settings of your app
 // and needs to match exactly any uri you will be redirecting to through your auth process
 // most of the troubleshooting I did seems to state the most common issue is that
 // users include or don't include a slash at the end of their URIs. These must match exactly.
 const redirect_uri = process.env.REDIRECT_URI
+
 const callback_url = process.env.CALLBACK_URL
 const session_secret = process.env.SESSION_SECRET
 const mongodb_uri = process.env.MONGODB_URI
@@ -32,7 +38,8 @@ let spotifyApi = new SpotifyWebApi({
 	redirectUri: redirect_uri
 })
 
-const port = 8888
+// set port to 8888 if not specified (heroku can specify in deployment this way)
+const port = process.env.PORT || 8888
 
 app.use(morgan('combined'))
 
