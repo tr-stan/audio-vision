@@ -21,7 +21,9 @@ const client_secret = process.env.CLIENT_SECRET
 // most of the troubleshooting I did seems to state the most common issue is that
 // users include or don't include a slash at the end of their URIs. These must match exactly.
 const redirect_uri = process.env.REDIRECT_URI
+const callback_url = process.env.CALLBACK_URL
 const session_secret = process.env.SESSION_SECRET
+const mongodb_uri = process.env.MONGODB_URI
 
 // instantiate spotify-web-api-node module/package
 let spotifyApi = new SpotifyWebApi({
@@ -58,7 +60,7 @@ app.use(passport.session());
 //     response.redirect('http://localhost:3000/login')
 // }
 
-mongoose.connect(`mongodb://localhost:27017/spotifeyes`, { useNewUrlParser: true })
+mongoose.connect(mongodb_uri, { useNewUrlParser: true })
     .then(() => {
         // console.log success message if the .connect promise returns successful (resolve)
         console.log('Database connection successful')
@@ -76,7 +78,7 @@ db.once('open', function() {
         new SpotifyStrategy({
                 clientID: client_id,
                 clientSecret: client_secret,
-                callbackURL: 'http://localhost:8888/callback'
+                callbackURL: callback_url
             },
             function(accessToken, refreshToken, expires_in, profile, done) {
                 User
