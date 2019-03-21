@@ -33,9 +33,9 @@ const mongodb_uri = process.env.MONGODB_URI
 
 // instantiate spotify-web-api-node module/package
 let spotifyApi = new SpotifyWebApi({
-	clientId: client_id,
-	clientSecret: client_secret,
-	redirectUri: redirect_uri
+	clientId: `${client_id}`,
+	clientSecret: `${client_secret}`,
+	redirectUri: `${redirect_uri}`
 })
 
 // set port to 8888 if not specified (heroku can specify in deployment this way)
@@ -44,7 +44,7 @@ const port = process.env.PORT
 app.use(morgan('combined'))
 
 let sess = {
-    secret: session_secret,
+    secret: `${session_secret}`,
     cookie: {
         maxAge: 60000
     },
@@ -67,7 +67,7 @@ app.use(passport.session());
 //     response.redirect('http://localhost:3000/login')
 // }
 
-mongoose.connect(mongodb_uri, { useNewUrlParser: true })
+mongoose.connect(`${mongodb_uri}`, { useNewUrlParser: true })
     .then(() => {
         // console.log success message if the .connect promise returns successful (resolve)
         console.log('Database connection successful')
@@ -83,9 +83,9 @@ db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function() {
     passport.use(
         new SpotifyStrategy({
-                clientID: client_id,
-                clientSecret: client_secret,
-                callbackURL: callback_url
+                clientID: `${client_id}`,
+                clientSecret: `${client_secret}`,
+                callbackURL: `${callback_url}`
             },
             function(accessToken, refreshToken, expires_in, profile, done) {
                 User
@@ -209,7 +209,7 @@ db.once('open', function() {
             // successful authentication, redirect home
             console.log(userCookie)
             response.body = 'Authorized'
-            response.redirect(redirect_uri);
+            response.redirect(`${redirect_uri}`);
         })
 })
 
