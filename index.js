@@ -130,6 +130,12 @@ db.once('open', function() {
     })
 
     app.get(
+        '/',
+        (request, response) => {
+            response.send("Welcome to Audio-Vision!")
+        })
+
+    app.get(
     	'/user',
         (request, response) => {
     		spotifyApi.getMe()
