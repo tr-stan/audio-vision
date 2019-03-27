@@ -31,14 +31,6 @@ const callback_url = process.env.CALLBACK_URL
 const session_secret = process.env.SESSION_SECRET
 const mongodb_uri = process.env.MONGODB_URI
 
-// instantiate spotify-web-api-node module/package
-let spotifyApi = new SpotifyWebApi({
-	clientId: `${client_id}`,
-	clientSecret: `${client_secret}`,
-	redirectUri: `${redirect_uri}`
-})
-
-// set port to 8888 if not specified (heroku can specify in deployment this way)
 const port = process.env.PORT
 
 app.use(morgan('combined'))
@@ -77,40 +69,17 @@ mongoose.connect(`${mongodb_uri}`, { useNewUrlParser: true })
         console.error(`Database connection error: ${err.message}`)
     })
 
+// instantiate spotify-web-api-node module/package
+let spotifyApi = new SpotifyWebApi({
+    clientId: `${client_id}`,
+    clientSecret: `${client_secret}`,
+    redirectUri: `${redirect_uri}`
+})
+
 // Open your mongoose connection
 let db = mongoose.connection // <this one took me a while to figure out!!
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function() {
-    passport.use(
-        new SpotifyStrategy({
-                clientID: `${client_id}`,
-                clientSecret: `${client_secret}`,
-                callbackURL: `${callback_url}`
-            },
-            function(accessToken, refreshToken, expires_in, profile, done) {
-                User
-                .findOneAndUpdate(
-                	{ spotifyId : profile.id },
-                	{ $set:{
-                		userName: profile.displayName,
-                		spotifyId : profile.id,
-                		accessToken: accessToken,
-                		refreshToken: refreshToken,
-                		userURI: profile._json.uri
-                	  }
-                	},
-                	{ upsert:true, returnNewDocument : true },
-                	)
-                .then( user => {
-                	console.log(user)
-                	return done(null, user)
-                })
-                .catch( error => {
-                	console.log("Oh no, an error occured with user creation", error.message, error)
-                })
-            }
-        )
-    )
 
     passport.serializeUser(function(user, done) {
     	spotifyApi.setAccessToken(user.accessToken)
@@ -129,10 +98,42 @@ db.once('open', function() {
         })
     })
 
+    passport.use(
+        new SpotifyStrategy({
+                clientID: `${client_id}`,
+                clientSecret: `${client_secret}`,
+                callbackURL: `${callback_url}`
+            },
+            function(accessToken, refreshToken, expires_in, profile, done) {
+                User
+                .findOneAndUpdate(
+                    { spotifyId : profile.id },
+                    { $set:{
+                        userName: profile.displayName,
+                        spotifyId : profile.id,
+                        accessToken: accessToken,
+                        refreshToken: refreshToken,
+                        userURI: profile._json.uri
+                      }
+                    },
+                    { upsert:true, returnNewDocument : true },
+                    )
+                .then( user => {
+                    console.log(user)
+                    return done(null, user)
+                })
+                .catch( error => {
+                    console.log("Oh no, an error occured with user creation", error.message, error)
+                })
+            }
+        )
+    )
+
+
     app.get(
         '/',
         (request, response) => {
-            response.send("Welcome to Audio-Vision!")
+            response.send(`Welcome to Audio-Vision! ${JSON.stringify(request.session)}`)
         })
 
     app.get(
