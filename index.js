@@ -81,14 +81,14 @@ let db = mongoose.connection // <this one took me a while to figure out!!
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function() {
     passport.serializeUser(function(user, done) {
-        spotifyApi.setAccessToken(user.accessToken)
+        
     	// console.log("Serialized: " + user)
-        console.log("USER ID-------------", + user.spotifyId)
-        done(null, user.spotifyId)
+        console.log("USER ID-------------" + user.id)
+        done(null, user.id)
     })
 
     passport.deserializeUser(function(id, done) {
-        User.findOne({spotifyId: id}, function(error, user) {
+        User.findById(id, function(error, user) {
             spotifyApi.resetCredentials()
             done(error, user)
         })
@@ -115,7 +115,8 @@ db.once('open', function() {
                     { upsert:true, returnNewDocument : true }
                     )
                 .then( user => {
-                    console.log(user)
+                    console.log("Passport Spotify USER:" + user)
+                    spotifyApi.setAccessToken(user.accessToken)
                     return done(null, user)
                 })
                 .catch( error => {
