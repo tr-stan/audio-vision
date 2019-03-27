@@ -80,8 +80,8 @@ let spotifyApi = new SpotifyWebApi({
 let db = mongoose.connection // <this one took me a while to figure out!!
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function() {
-    let accessToken = ''
     passport.serializeUser(function(user, done) {
+        spotifyApi.setAccessToken(user.accessToken)
     	// console.log("Serialized: " + user)
         console.log("USER ID-------------", + user.spotifyId)
         done(null, user.spotifyId)
@@ -115,7 +115,6 @@ db.once('open', function() {
                     { upsert:true, returnNewDocument : true }
                     )
                 .then( user => {
-                    accessToken = user.accessToken
                     console.log(user)
                     return done(null, user)
                 })
@@ -205,7 +204,6 @@ db.once('open', function() {
         }),
         function(request, response) {
             // successful authentication, redirect home
-            spotifyApi.setAccessToken(accessToken)
             response.body = 'Authorized'
             response.redirect(`${redirect_uri}`);
         })
