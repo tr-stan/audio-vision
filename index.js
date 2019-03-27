@@ -83,18 +83,15 @@ db.once('open', function() {
 
     passport.serializeUser(function(user, done) {
     	spotifyApi.setAccessToken(user.accessToken)
-    	console.log("Serialized: " + user)
-    	userCookie = {
-    		userId : user.spotifyId,
-    		userAccsessToken : user.accessToken
-    	}
-        done(null, user.id)
+    	// console.log("Serialized: " + user)
+        console.log("USER ID-------------", + user.spotifyId)
+        done(null, user.spotifyId)
     })
 
     passport.deserializeUser(function(id, done) {
-        User.findById(id, function(error, user) {
-            if (error) { return done(err) }
-            done(null, user)
+        User.findOne({spotifyId: id}, function(error, user) {
+            spotifyApi.resetCredentials()
+            done(error, user)
         })
     })
 
@@ -208,7 +205,6 @@ db.once('open', function() {
         }),
         function(request, response) {
             // successful authentication, redirect home
-            console.log(userCookie)
             response.body = 'Authorized'
             response.redirect(`${redirect_uri}`);
         })
