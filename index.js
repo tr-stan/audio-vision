@@ -82,7 +82,6 @@ db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function() {
 
     passport.serializeUser(function(user, done) {
-    	spotifyApi.setAccessToken(user.accessToken)
     	// console.log("Serialized: " + user)
         console.log("USER ID-------------", + user.spotifyId)
         done(null, user.spotifyId)
@@ -205,6 +204,7 @@ db.once('open', function() {
         }),
         function(request, response) {
             // successful authentication, redirect home
+            spotifyApi.setAccessToken(user.accessToken)
             response.body = 'Authorized'
             response.redirect(`${redirect_uri}`);
         })
