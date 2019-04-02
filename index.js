@@ -40,8 +40,8 @@ let sess = {
     cookie: {
         maxAge: 60000
     },
-    saveUninitialized: true,
-    resave: true
+    saveUninitialized: false,
+    resave: false
 }
 
 app.use(session(sess))
@@ -80,19 +80,6 @@ let spotifyApi = new SpotifyWebApi({
 let db = mongoose.connection // <this one took me a while to figure out!!
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function() {
-    passport.serializeUser(function(user, done) {
-
-        // console.log("Serialized: " + user)
-        console.log("USER ID-------------" + user.id)
-        done(null, user.id)
-    })
-
-    passport.deserializeUser(function(id, done) {
-        User.findById(id, function(error, user) {
-            spotifyApi.resetCredentials()
-            done(error, user)
-        })
-    })
 
     passport.use(
         new SpotifyStrategy({
@@ -115,7 +102,6 @@ db.once('open', function() {
                         }, { upsert: true, returnNewDocument: true })
                         .then(user => {
                             console.log("Passport Spotify USER:" + user)
-                            spotifyApi.setAccessToken(user.accessToken)
                             return done(null, user)
                         })
                         .catch(error => {
@@ -208,6 +194,19 @@ db.once('open', function() {
             response.body = 'Authorized'
             response.redirect(`${redirect_uri}`);
         })
+})
+
+passport.serializeUser(function(user, done) {
+
+    // console.log("Serialized: " + user)
+    console.log("USER ID-------------" + user.id)
+    done(null, user.id)
+})
+
+passport.deserializeUser(function(id, done) {
+    User.findById(id, function(error, user) {
+        done(error, user)
+    })
 })
 
 app.listen(port, () => {
