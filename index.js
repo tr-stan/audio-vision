@@ -167,14 +167,15 @@ db.once('open', function() {
         function(request, response) {
             let code = request.query.code
             let state = request.query.state
+            console.log("SESSION ID: ", request.sessionID)
             console.log("SESSION: ", request.session)
 
             spotifyApi.authorizationCodeGrant(code)
                 .then(data => {
                     console.log("DATA BODY: ", data.body)
                     request.session.accessToken = data.body['access_token']
-                    request.session.cookie.accessToken = data.body['access_token']
                     console.log("REQUEST SESSION: ", request.session)
+                    request.session.save()
                     // successful authentication, redirect home
                     response.redirect(`http://localhost:3000/?access_token=${data.body['access_token']}&refresh_token=${data.body['refresh_token']}`);
                 })
@@ -194,7 +195,10 @@ db.once('open', function() {
                 clientSecret: `${client_secret}`,
                 redirectUri: `${redirect_uri}`
             })
-            AuthenticatedSpotifyApi.setAccessToken(accessToken)
+            let storedCollection = db.collection('sessions')
+            console.log("ID OF SESSION", request.sessionID)
+            // console.log("NEWER REQUEST SESSION:", storedSession)
+            AuthenticatedSpotifyApi.setAccessToken(request.session.accessToken)
             AuthenticatedSpotifyApi.getMe()
                 .then(data => {
                     console.log('Some info about the authenticated user', data.body)
