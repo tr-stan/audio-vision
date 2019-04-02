@@ -62,17 +62,14 @@ mongoose.connect(`${mongodb_uri}`, { useNewUrlParser: true })
     })
 
 // Open your mongoose connection
-let db = mongoose.connection // <this one took me a while to figure out!!
+let db = mongoose.connection
 
 let sess = {
     secret: `${session_secret}`,
-    cookie: {
-        maxAge: 60000
-    },
     saveUninitialized: false, // don't create session until something stored
     resave: false, //don't save session if unmodified
     store: new MongoStore({
-        url: mongodb_uri,
+        mongooseConnection: db,
         touchAfter: 2 * 3600
     })
 }
@@ -160,7 +157,6 @@ db.once('open', function() {
             let state = generateRandomString(11)
             let showDialog = true
             let authorizeURL = spotifyApi.createAuthorizeURL(scopes, state, showDialog)
-            console.log(`AUTHORIZEURL IS: ${authorizeURL}`)
             response.redirect(authorizeURL)
         })
 
@@ -217,7 +213,7 @@ db.once('open', function() {
         })
 
     app.post(
-        '/search',
+        '/search/',
         (request, response) => {
             console.log("USSSSSSSSSSSEEERRRRR", request.user)
             spotifyApi.searchTracks(request.body.track)
