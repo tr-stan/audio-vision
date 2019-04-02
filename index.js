@@ -32,6 +32,7 @@ const redirect_uri = process.env.REDIRECT_URI
 const callback_url = process.env.CALLBACK_URL
 const session_secret = process.env.SESSION_SECRET
 const mongodb_uri = process.env.MONGODB_URI
+const is_secure = process.env.IS_SECURE
 
 // set port to 8888 if not specified (heroku can specify in deployment this way)
 const port = process.env.PORT
@@ -64,7 +65,12 @@ mongoose.connect(`${mongodb_uri}`, { useNewUrlParser: true })
 // Open your mongoose connection
 let db = mongoose.connection
 
+// setup session parameters
 let sess = {
+    cookie: {
+        maxAge: 10 * 60000, // maxAge = 10 minutes
+        secure: is_secure
+    },
     secret: `${session_secret}`,
     saveUninitialized: false, // don't create session until something stored
     resave: false, //don't save session if unmodified
@@ -74,9 +80,8 @@ let sess = {
     })
 }
 
+// mount express session as middleware for each http request this app sends
 app.use(session(sess))
-// app.use(passport.initialize());
-// app.use(passport.session());
 
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function() {
@@ -95,6 +100,7 @@ db.once('open', function() {
 
     // set scopes for what data the users must approve access to
     let scopes = ['user-read-private', 'user-read-email']
+
     // instantiate spotify-web-api-node module/package
     let spotifyApi = new SpotifyWebApi({
         clientId: `${client_id}`,
@@ -149,10 +155,6 @@ db.once('open', function() {
 
     app.get(
         '/auth/spotify',
-        // passport.authenticate('spotify', {
-        //  scope: ['user-read-email', 'user-read-private'],
-        //     showDialog: true
-        // }),
         function(request, response) {
             let state = generateRandomString(11)
             let showDialog = true
@@ -162,10 +164,6 @@ db.once('open', function() {
 
     app.get(
         '/callback',
-        // passport.authenticate('spotify', {
-        //     failureRedirect: '/' ,
-        //     message : 'unauthorized'
-        // }),
         function(request, response) {
             let code = request.query.code
             let state = request.query.state
@@ -174,13 +172,10 @@ db.once('open', function() {
             spotifyApi.authorizationCodeGrant(code)
                 .then(data => {
                     console.log("DATA BODY: ", data.body)
-                    sess.accessToken = data.body['access_token']
-                    // set access and refresh token for later use
-                    // spotifyApi.setAccessToken(data.body['access_token'])
-                    // spotifyApi.setRefreshToken(data.body['refresh_token']);
+                    request.session.accessToken = data.body['access_token']
+                    request.session.cookie.accessToken = data.body['access_token']
+                    console.log("REQUEST SESSION: ", request.session)
                     // successful authentication, redirect home
-                    // response.body = 'Authorized'
-
                     response.redirect(`http://localhost:3000/?access_token=${data.body['access_token']}&refresh_token=${data.body['refresh_token']}`);
                 })
                 .catch(error => {
@@ -251,19 +246,6 @@ db.once('open', function() {
                     console.log('Analysis error', error.name, error)
                 })
         })
-
-    // passport.serializeUser(function(user, done) {
-
-    //     console.log("USER ID-------------", user.id)
-    //     done(null, user.id)
-    // })
-
-    // passport.deserializeUser(function(id, done) {
-    //     console.log("DESERIALIZE ID", id)
-    //     User.findById(id, function(error, user) {
-    //         done(error, user.id)
-    //     })
-    // })
 })
 
 app.listen(port, () => {
