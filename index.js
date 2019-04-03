@@ -28,6 +28,7 @@ const client_secret = process.env.CLIENT_SECRET
 // most of the troubleshooting I did seems to state the most common issue is that
 // users include or don't include a slash at the end of their URIs. These must match exactly.
 const redirect_uri = process.env.REDIRECT_URI
+const callback_url = process.env.CALLBACK_URL
 const session_secret = process.env.SESSION_SECRET
 const mongodb_uri = process.env.MONGODB_URI
 const is_secure = process.env.IS_SECURE
@@ -103,7 +104,7 @@ db.once('open', function() {
     let spotifyApi = new SpotifyWebApi({
         clientId: `${client_id}`,
         clientSecret: `${client_secret}`,
-        redirectUri: `${redirect_uri}`
+        redirectUri: `${callback_url}`
     })
 
     // passport.use(
@@ -174,11 +175,11 @@ db.once('open', function() {
                     request.session.accessToken = data.body['access_token']
 
                     // successful authentication, redirect home
-                    response.redirect(`http://localhost:3000/?access_token=${data.body['access_token']}&refresh_token=${data.body['refresh_token']}`);
+                    response.redirect(`${redirect_uri}/?access_token=${data.body['access_token']}&refresh_token=${data.body['refresh_token']}`);
                 })
                 .catch(error => {
                     console.log(error.name, error)
-                    response.redirect(`http://localhost:3000`)
+                    response.redirect(`${redirect_uri}`)
                 })
 
         })
@@ -190,7 +191,7 @@ db.once('open', function() {
             let AuthenticatedSpotifyApi = new SpotifyWebApi({
                 clientId: `${client_id}`,
                 clientSecret: `${client_secret}`,
-                redirectUri: `${redirect_uri}`
+                redirectUri: `${callback_url}`
             })
             // let storedCollection = db.collection('sessions')
             console.log("ID OF SESSION", request.sessionID)
@@ -216,7 +217,7 @@ db.once('open', function() {
             let AuthenticatedSpotifyApi = new SpotifyWebApi({
                 clientId: `${client_id}`,
                 clientSecret: `${client_secret}`,
-                redirectUri: `${redirect_uri}`
+                redirectUri: `${callback_url}`
             })
             // console.log("NEWER REQUEST SESSION:", storedSession)
             AuthenticatedSpotifyApi.setAccessToken(accessToken)
@@ -245,7 +246,7 @@ db.once('open', function() {
             let AuthenticatedSpotifyApi = new SpotifyWebApi({
                 clientId: `${client_id}`,
                 clientSecret: `${client_secret}`,
-                redirectUri: `${redirect_uri}`
+                redirectUri: `${callback_url}`
             })
             // console.log("NEWER REQUEST SESSION:", storedSession)
             AuthenticatedSpotifyApi.setAccessToken(accessToken)
