@@ -6,15 +6,17 @@ require('dotenv').config()
 const app = require('express')()
 const morgan = require('morgan')
 const compression = require('compression')
-const passport = require('passport')
-const SpotifyStrategy = require('passport-spotify').Strategy
+// const passport = require('passport')
+// const SpotifyStrategy = require('passport-spotify').Strategy
 const SpotifyWebApi = require('spotify-web-api-node')
 const session = require('express-session')
+const MongoStore = require('connect-mongo')(session);
 const bodyParser = require('body-parser')
 const mongoose = require('mongoose')
 const cors = require('cors')
 const User = require('./User')
 
+//===================== ENV/CONFIG VARIABLES ===========================================
 // you can get client_id and client_secret from registering your app with Spotify
 // at developer.spotofy.com/dashboard
 // then you will need to save them in a local .env file that is added to your .gitignore
@@ -30,27 +32,18 @@ const redirect_uri = process.env.REDIRECT_URI
 const callback_url = process.env.CALLBACK_URL
 const session_secret = process.env.SESSION_SECRET
 const mongodb_uri = process.env.MONGODB_URI
+const is_secure = process.env.IS_SECURE
 
+// set port to 8888 if not specified (heroku can specify in deployment this way)
 const port = process.env.PORT
+//====================================================================================
 
 app.use(morgan('combined'))
-
-let sess = {
-    secret: `${session_secret}`,
-    cookie: {
-        maxAge: 60000
-    },
-    saveUninitialized: false,
-    resave: false
-}
-
-app.use(session(sess))
 app.use(cors())
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json())
 
-app.use(passport.initialize());
-app.use(passport.session());
+
 
 // ensureIsAuthenticated = (request, response, next) => {
 //     if (request.isAuthenticated()) {
@@ -69,60 +62,144 @@ mongoose.connect(`${mongodb_uri}`, { useNewUrlParser: true })
         console.error(`Database connection error: ${err.message}`)
     })
 
-// instantiate spotify-web-api-node module/package
-let spotifyApi = new SpotifyWebApi({
-    clientId: `${client_id}`,
-    clientSecret: `${client_secret}`,
-    redirectUri: `${redirect_uri}`
-})
-
 // Open your mongoose connection
-let db = mongoose.connection // <this one took me a while to figure out!!
+let db = mongoose.connection
+
+// setup session parameters
+let sess = {
+    cookie: {
+        maxAge: 10 * 60000, // maxAge = 10 minutes
+        secure: is_secure
+    },
+    secret: `${session_secret}`,
+    saveUninitialized: false, // don't create session until something stored
+    resave: false, //don't save session if unmodified
+    store: new MongoStore({
+        mongooseConnection: db,
+        touchAfter: 2 * 3600
+    })
+}
+
+// mount express session as middleware for each http request this app sends
+app.use(session(sess))
+
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function() {
 
-    passport.use(
-        new SpotifyStrategy({
-                clientID: `${client_id}`,
-                clientSecret: `${client_secret}`,
-                callbackURL: `${callback_url}`
-            },
-            function(accessToken, refreshToken, expires_in, profile, done) {
-                // asynchronous verification, per passportjs examples
-                process.nextTick(function() {
-                    User
-                        .findOneAndUpdate({ spotifyId: profile.id }, {
-                            $set: {
-                                userName: profile.displayName,
-                                spotifyId: profile.id,
-                                accessToken: accessToken,
-                                refreshToken: refreshToken,
-                                userURI: profile._json.uri
-                            }
-                        }, { upsert: true, returnNewDocument: true })
-                        .then(user => {
-                            console.log("Passport Spotify USER:" + user)
-                            return done(null, user)
-                        })
-                        .catch(error => {
-                            console.log("Oh no, an error occured with user creation", error.message, error)
-                        })
-                })
-            }
-        )
-    )
+    // generate random string (function taken from spotify's tutorial) to use for state
+    // when requesting authorization code to use in token request
+    let generateRandomString = function(length) {
+        let text = '';
+        let possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
+        for (let i = 0; i < length; i++) {
+            text += possible.charAt(Math.floor(Math.random() * possible.length));
+        }
+        return text;
+    };
+
+    // set scopes for what data the users must approve access to
+    let scopes = ['user-read-private', 'user-read-email']
+
+    // instantiate spotify-web-api-node module/package
+    let spotifyApi = new SpotifyWebApi({
+        clientId: `${client_id}`,
+        clientSecret: `${client_secret}`,
+        redirectUri: `${redirect_uri}`
+    })
+
+    // passport.use(
+    //     new SpotifyStrategy({
+    //             clientID: `${client_id}`,
+    //             clientSecret: `${client_secret}`,
+    //             callbackURL: `${callback_url}`
+    //         },
+    //         function(accessToken, refreshToken, expires_in, profile, done) {
+    //             // asynchronous verification, per passport-spotify docs
+    //             process.nextTick(function() {
+    // User
+    // .findOneAndUpdate(
+    //     // find user in your mongo db where spotifyID equals id parameter of user profile
+    //  { spotifyId : profile.id },
+    //     // sets the following properties on the user's document in the mongo db
+    //  { $set:{
+    //      userName: profile.displayName,
+    //      spotifyId : profile.id,
+    //      accessToken: accessToken,
+    //      refreshToken: refreshToken,
+    //      userURI: profile._json.uri
+    //    }
+    //  },
+    //     // creates new document if user document does not already exist in collection
+    //     // also returns new document instead of previous document once everything is done
+    //  { upsert:true, returnNewDocument : true },
+    //  )
+    //                 .then( user => {
+    //                  console.log(user)
+    //                  return done(null, user)
+    //                 })
+    //                 .catch( error => {
+    //                  console.log("Oh no, an error occured with user creation", error.message, error)
+    //                     return done(error)
+    //                 })
+    //             })
+    //         }
+    //     )
+    // )
 
     app.get(
         '/',
         (request, response) => {
-            response.send(`Welcome to Audio-Vision! ${JSON.stringify(request.session)}`)
+            response.send("Welcome to Audio-Vision!")
         })
 
     app.get(
-        '/user',
+        '/auth/spotify',
+        function(request, response) {
+            let state = generateRandomString(11)
+            let showDialog = true
+            let authorizeURL = spotifyApi.createAuthorizeURL(scopes, state, showDialog)
+            response.redirect(authorizeURL)
+        })
+
+    app.get(
+        '/callback',
+        function(request, response) {
+            let code = request.query.code
+            let state = request.query.state
+            console.log("SESSION ID: ", request.sessionID)
+            console.log("SESSION: ", request.session)
+
+            spotifyApi.authorizationCodeGrant(code)
+                .then(data => {
+                    console.log("DATA BODY: ", data.body)
+                    request.session.accessToken = data.body['access_token']
+                    console.log("REQUEST SESSION: ", request.session)
+
+                    // successful authentication, redirect home
+                    response.redirect(`http://localhost:3000/?access_token=${data.body['access_token']}&refresh_token=${data.body['refresh_token']}`);
+                })
+                .catch(error => {
+                    console.log(error.name, error)
+                    response.redirect(`http://localhost:3000`)
+                })
+
+        })
+
+    app.get(
+        '/user/:token',
         (request, response) => {
-            spotifyApi.getMe()
+            let accessToken = request.params.token
+            let AuthenticatedSpotifyApi = new SpotifyWebApi({
+                clientId: `${client_id}`,
+                clientSecret: `${client_secret}`,
+                redirectUri: `${redirect_uri}`
+            })
+            // let storedCollection = db.collection('sessions')
+            console.log("ID OF SESSION", request.sessionID)
+            // console.log("NEWER REQUEST SESSION:", storedSession)
+            AuthenticatedSpotifyApi.setAccessToken(accessToken)
+            AuthenticatedSpotifyApi.getMe()
                 .then(data => {
                     console.log('Some info about the authenticated user', data.body)
                     response.send(data.body)
@@ -135,9 +212,18 @@ db.once('open', function() {
         })
 
     app.post(
-        '/search',
+        '/search/:token',
         (request, response) => {
-            spotifyApi.searchTracks(request.body.track)
+            let accessToken = request.params.token
+            console.log("SEARCH TOKEN: ", accessToken)
+            let AuthenticatedSpotifyApi = new SpotifyWebApi({
+                clientId: `${client_id}`,
+                clientSecret: `${client_secret}`,
+                redirectUri: `${redirect_uri}`
+            })
+            // console.log("NEWER REQUEST SESSION:", storedSession)
+            AuthenticatedSpotifyApi.setAccessToken(accessToken)
+            AuthenticatedSpotifyApi.searchTracks(request.body.track)
                 .then(data => {
                     let goodData = data.body.tracks.items.map(item => {
                         console.log(item.name)
@@ -155,10 +241,19 @@ db.once('open', function() {
         })
 
     app.post(
-        '/analyze',
+        '/analyze/:token',
         (request, response) => {
+            let accessToken = request.params.token
+            console.log("SEARCH TOKEN: ", accessToken)
+            let AuthenticatedSpotifyApi = new SpotifyWebApi({
+                clientId: `${client_id}`,
+                clientSecret: `${client_secret}`,
+                redirectUri: `${redirect_uri}`
+            })
+            // console.log("NEWER REQUEST SESSION:", storedSession)
+            AuthenticatedSpotifyApi.setAccessToken(accessToken)
             console.log("MIMIMIMIMIMIMIMIMI\n", request.body.id, "\nMIMIMIMIMIMIMIMIMI")
-            spotifyApi.getAudioAnalysisForTrack(request.body.id)
+            AuthenticatedSpotifyApi.getAudioAnalysisForTrack(request.body.id)
                 .then(data => {
                     // let analyzedBars = data.body.bars.map(bar => {
                     //     console.log("BAR",bar)
@@ -172,41 +267,6 @@ db.once('open', function() {
                     console.log('Analysis error', error.name, error)
                 })
         })
-
-    app.get(
-        '/auth/spotify',
-        passport.authenticate('spotify', {
-            scope: ['user-read-email', 'user-read-private'],
-            showDialog: true
-        }),
-        function(request, response) {
-            // this function should not be called due to the spotify authentication redirect
-        })
-
-    app.get(
-        '/callback',
-        passport.authenticate('spotify', {
-            failureRedirect: '/',
-            message: 'unauthorized'
-        }),
-        function(request, response) {
-            // successful authentication, redirect home
-            response.body = 'Authorized'
-            response.redirect(`${redirect_uri}`);
-        })
-})
-
-passport.serializeUser(function(user, done) {
-
-    // console.log("Serialized: " + user)
-    console.log("USER ID-------------" + user.id)
-    done(null, user.id)
-})
-
-passport.deserializeUser(function(id, done) {
-    User.findById(id, function(error, user) {
-        done(error, user)
-    })
 })
 
 app.listen(port, () => {
