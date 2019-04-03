@@ -42,15 +42,6 @@ app.use(cors())
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json())
 
-
-
-// ensureIsAuthenticated = (request, response, next) => {
-//     if (request.isAuthenticated()) {
-//         return next();
-//     }
-//     response.redirect('http://localhost:3000/login')
-// }
-
 mongoose.connect(`${mongodb_uri}`, { useNewUrlParser: true })
     .then(() => {
         // console.log success message if the .connect promise returns successful (resolve)
@@ -82,6 +73,7 @@ let sess = {
 // mount express session as middleware for each http request this app sends
 app.use(session(sess))
 
+// general db connection setup from mongoose docs
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function() {
 
@@ -157,6 +149,10 @@ db.once('open', function() {
         function(request, response) {
             let state = generateRandomString(11)
             let showDialog = true
+
+            // create the authorizeURL with parameters for what scopes user will approve access to
+            // this app will redirect to Spotify, and once user approves then it will send
+            // an authorization code to our designated redirect_uri
             let authorizeURL = spotifyApi.createAuthorizeURL(scopes, state, showDialog)
             response.redirect(authorizeURL)
         })
@@ -164,18 +160,20 @@ db.once('open', function() {
     app.get(
         '/callback',
         function(request, response) {
+            // set variable for auth code and state sent from Spotify's redirect
             let code = request.query.code
             let state = request.query.state
-            console.log("SESSION ID: ", request.sessionID)
-            console.log("SESSION: ", request.session)
 
+            // send auth code back to spotify in order to receive access token and refresh token
             spotifyApi.authorizationCodeGrant(code)
                 .then(data => {
                     console.log("DATA BODY: ", data.body)
                     request.session.accessToken = data.body['access_token']
 
                     // successful authentication, redirect home
-                    response.redirect(`${redirect_uri}/?access_token=${data.body['access_token']}&refresh_token=${data.body['refresh_token']}`);
+                    // putting access token in redirect url as search parameter to be used on front-end
+                    // and passed to back-end for subsequent calls
+                    response.redirect(`${redirect_uri}/?access_token=${data.body['access_token']}`);
                 })
                 .catch(error => {
                     console.log(error.name, error)
@@ -187,15 +185,21 @@ db.once('open', function() {
     app.get(
         '/user/:token',
         (request, response) => {
+
             let accessToken = request.params.token
+
+            // here I am creating a new instance of SpotifyWebApi because in order
+            // to have multiple users be able to log in at the same time, the access token
+            // must be set locally for each request to Spotify's web API
             let AuthenticatedSpotifyApi = new SpotifyWebApi({
                 clientId: `${client_id}`,
                 clientSecret: `${client_secret}`,
                 redirectUri: `${callback_url}`
             })
+
             // let storedCollection = db.collection('sessions')
-            console.log("ID OF SESSION", request.sessionID)
-            // console.log("NEWER REQUEST SESSION:", storedSession)
+            // console.log("ID OF SESSION", request.sessionID)
+
             AuthenticatedSpotifyApi.setAccessToken(accessToken)
             AuthenticatedSpotifyApi.getMe()
                 .then(data => {
@@ -213,13 +217,13 @@ db.once('open', function() {
         '/search/:token',
         (request, response) => {
             let accessToken = request.params.token
-            console.log("SEARCH TOKEN: ", accessToken)
+
             let AuthenticatedSpotifyApi = new SpotifyWebApi({
                 clientId: `${client_id}`,
                 clientSecret: `${client_secret}`,
                 redirectUri: `${callback_url}`
             })
-            // console.log("NEWER REQUEST SESSION:", storedSession)
+
             AuthenticatedSpotifyApi.setAccessToken(accessToken)
             AuthenticatedSpotifyApi.searchTracks(request.body.track)
                 .then(data => {
@@ -242,15 +246,14 @@ db.once('open', function() {
         '/analyze/:token',
         (request, response) => {
             let accessToken = request.params.token
-            console.log("SEARCH TOKEN: ", accessToken)
+
             let AuthenticatedSpotifyApi = new SpotifyWebApi({
                 clientId: `${client_id}`,
                 clientSecret: `${client_secret}`,
                 redirectUri: `${callback_url}`
             })
-            // console.log("NEWER REQUEST SESSION:", storedSession)
+            
             AuthenticatedSpotifyApi.setAccessToken(accessToken)
-            console.log("MIMIMIMIMIMIMIMIMI\n", request.body.id, "\nMIMIMIMIMIMIMIMIMI")
             AuthenticatedSpotifyApi.getAudioAnalysisForTrack(request.body.id)
                 .then(data => {
                     // let analyzedBars = data.body.bars.map(bar => {
