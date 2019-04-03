@@ -195,7 +195,7 @@ db.once('open', function() {
                 clientSecret: `${client_secret}`,
                 redirectUri: `${redirect_uri}`
             })
-            let storedCollection = db.collection('sessions')
+            // let storedCollection = db.collection('sessions')
             console.log("ID OF SESSION", request.sessionID)
             // console.log("NEWER REQUEST SESSION:", storedSession)
             AuthenticatedSpotifyApi.setAccessToken(accessToken)
@@ -212,10 +212,18 @@ db.once('open', function() {
         })
 
     app.post(
-        '/search/',
+        '/search/:token',
         (request, response) => {
-            console.log("USSSSSSSSSSSEEERRRRR", request.user)
-            spotifyApi.searchTracks(request.body.track)
+            let accessToken = request.params.token
+            console.log("SEARCH TOKEN: ", accessToken)
+            let AuthenticatedSpotifyApi = new SpotifyWebApi({
+                clientId: `${client_id}`,
+                clientSecret: `${client_secret}`,
+                redirectUri: `${redirect_uri}`
+            })
+            // console.log("NEWER REQUEST SESSION:", storedSession)
+            AuthenticatedSpotifyApi.setAccessToken(accessToken)
+            AuthenticatedSpotifyApi.searchTracks(request.body.track)
                 .then(data => {
                     let goodData = data.body.tracks.items.map(item => {
                         console.log(item.name)
@@ -233,10 +241,19 @@ db.once('open', function() {
         })
 
     app.post(
-        '/analyze',
+        '/analyze/:token',
         (request, response) => {
+            let accessToken = request.params.token
+            console.log("SEARCH TOKEN: ", accessToken)
+            let AuthenticatedSpotifyApi = new SpotifyWebApi({
+                clientId: `${client_id}`,
+                clientSecret: `${client_secret}`,
+                redirectUri: `${redirect_uri}`
+            })
+            // console.log("NEWER REQUEST SESSION:", storedSession)
+            AuthenticatedSpotifyApi.setAccessToken(accessToken)
             console.log("MIMIMIMIMIMIMIMIMI\n", request.body.id, "\nMIMIMIMIMIMIMIMIMI")
-            spotifyApi.getAudioAnalysisForTrack(request.body.id)
+            AuthenticatedSpotifyApi.getAudioAnalysisForTrack(request.body.id)
                 .then(data => {
                     // let analyzedBars = data.body.bars.map(bar => {
                     //     console.log("BAR",bar)
