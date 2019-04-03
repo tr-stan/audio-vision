@@ -105,7 +105,7 @@ db.once('open', function() {
     let spotifyApi = new SpotifyWebApi({
         clientId: `${client_id}`,
         clientSecret: `${client_secret}`,
-        redirectUri: `${redirect_uri}`
+        redirectUri: `${callback_url}`
     })
 
     // passport.use(
@@ -174,7 +174,6 @@ db.once('open', function() {
                 .then(data => {
                     console.log("DATA BODY: ", data.body)
                     request.session.accessToken = data.body['access_token']
-                    console.log("REQUEST SESSION: ", request.session)
 
                     // successful authentication, redirect home
                     response.redirect(`http://localhost:3000/?access_token=${data.body['access_token']}&refresh_token=${data.body['refresh_token']}`);
