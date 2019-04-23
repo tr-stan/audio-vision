@@ -18,7 +18,7 @@ const User = require('./User')
 
 //===================== ENV/CONFIG VARIABLES ===========================================
 // you can get client_id and client_secret from registering your app with Spotify
-// at developer.spotofy.com/dashboard
+// at developer.spotify.com/dashboard
 // then you will need to save them in a local .env file that is added to your .gitignore
 const client_id = process.env.CLIENT_ID
 const client_secret = process.env.CLIENT_SECRET
@@ -154,6 +154,8 @@ db.once('open', function() {
             // this app will redirect to Spotify, and once user approves then it will send
             // an authorization code to our designated redirect_uri
             let authorizeURL = spotifyApi.createAuthorizeURL(scopes, state, showDialog)
+            console.log(callback_url)
+            console.log(authorizeURL, "<--AUTHORIZEURL")
             response.redirect(authorizeURL)
         })
 
