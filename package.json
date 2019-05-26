@@ -10,25 +10,19 @@
     "mongoose": "^5.4.18",
     "morgan": "^1.9.1",
     "nodemon": "^1.18.10",
-    "passport": "^0.4.0",
-    "passport-spotify": "^1.0.1",
-    "promise": "^8.0.2",
-    "querystring": "^0.2.0",
-    "spotify-web-api-node": "^4.0.0",
-    "superagent": "^4.1.0"
+    "spotify-web-api-node": "^4.0.0"
   },
-  "name": "spotify-track-visualizer",
-  "description": "A project to fetch data from Spotify's WEB API to visualize tracks, and set up a database to store user data",
+  "name": "audio-vision",
+  "description": "A backend project that fetches track audio analysis data from Spotify's web API and serves it to a front-end application",
   "version": "1.0.0",
   "main": "index.js",
   "devDependencies": {},
   "scripts": {
-    "test": "echo 'merhabalar'",
     "start": "nodemon index.js"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tri-be/spotify-track-visualizer.git"
+    "url": "git+https://github.com/tri-be/audio-vision.git"
   },
   "keywords": [
     "spotify",
@@ -40,7 +34,7 @@
   "author": "Tristan Bennett",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/tri-be/spotify-track-visualizer/issues"
+    "url": "https://github.com/tri-be/audio-vision/issues"
   },
-  "homepage": "https://github.com/tri-be/spotify-track-visualizer#readme"
+  "homepage": "https://github.com/tri-be/audio-vision#readme"
 }
