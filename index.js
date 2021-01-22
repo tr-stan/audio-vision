@@ -42,40 +42,40 @@ app.use(cors())
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json())
 
-mongoose.connect(`${mongodb_uri}`, { useNewUrlParser: true })
-    .then(() => {
-        // console.log success message if the .connect promise returns successful (resolve)
-        console.log('Database connection successful')
-    })
-    // console.logs error message if the .connect promise returns an error (reject)
-    .catch(err => {
-        console.error(`Database connection error: ${err.message}`)
-    })
+// mongoose.connect(`${mongodb_uri}`, { useNewUrlParser: true })
+//     .then(() => {
+//         // console.log success message if the .connect promise returns successful (resolve)
+//         console.log('Database connection successful')
+//     })
+//     // console.logs error message if the .connect promise returns an error (reject)
+//     .catch(err => {
+//         console.error(`Database connection error: ${err.message}`)
+//     })
 
-// Open your mongoose connection
-let db = mongoose.connection
+// // Open your mongoose connection
+// let db = mongoose.connection
 
-// setup session parameters
-let sess = {
-    cookie: {
-        maxAge: 10 * 60000, // maxAge = 10 minutes
-        secure: is_secure
-    },
-    secret: `${session_secret}`,
-    saveUninitialized: false, // don't create session until something stored
-    resave: false, //don't save session if unmodified
-    store: new MongoStore({
-        mongooseConnection: db,
-        touchAfter: 2 * 3600
-    })
-}
+// // setup session parameters
+// let sess = {
+//     cookie: {
+//         maxAge: 10 * 60000, // maxAge = 10 minutes
+//         secure: is_secure
+//     },
+//     secret: `${session_secret}`,
+//     saveUninitialized: false, // don't create session until something stored
+//     resave: false, //don't save session if unmodified
+//     store: new MongoStore({
+//         mongooseConnection: db,
+//         touchAfter: 2 * 3600
+//     })
+// }
 
-// mount express session as middleware for each http request this app sends
-app.use(session(sess))
+// // mount express session as middleware for each http request this app sends
+// app.use(session(sess))
 
-// general db connection setup from mongoose docs
-db.on('error', console.error.bind(console, 'connection error:'));
-db.once('open', function() {
+// // general db connection setup from mongoose docs
+// db.on('error', console.error.bind(console, 'connection error:'));
+// db.once('open', function() {
 
     // generate random string (function taken from spotify's tutorial) to use for state
     // when requesting authorization code to use in token request
@@ -254,7 +254,7 @@ db.once('open', function() {
                 clientSecret: `${client_secret}`,
                 redirectUri: `${callback_url}`
             })
-            
+
             AuthenticatedSpotifyApi.setAccessToken(accessToken)
             AuthenticatedSpotifyApi.getAudioAnalysisForTrack(request.body.id)
                 .then(data => {
@@ -270,7 +270,7 @@ db.once('open', function() {
                     console.log('Analysis error', error.name, error)
                 })
         })
-})
+// })
 
 app.listen(port, () => {
     console.log(`Listening on port ${port}`)
