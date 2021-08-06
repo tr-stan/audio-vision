@@ -4,13 +4,13 @@
     "compression": "^1.7.4",
     "connect-mongo": "^3.2.0",
     "cors": "^2.8.5",
-    "dotenv": "^8.2.0",
+    "dotenv": "^8.6.0",
     "express": "^4.17.1",
-    "express-session": "^1.17.1",
-    "mongoose": "^5.11.13",
+    "express-session": "^1.17.2",
+    "mongoose": "^5.13.5",
     "morgan": "^1.10.0",
-    "nodemon": "^2.0.7",
-    "spotify-web-api-node": "^5.0.0"
+    "nodemon": "^2.0.12",
+    "spotify-web-api-node": "^5.0.2"
   },
   "name": "audio-vision",
   "description": "A backend project that fetches track audio analysis data from Spotify's web API and serves it to a front-end application",
