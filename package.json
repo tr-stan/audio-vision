@@ -9,7 +9,7 @@
     "express-session": "^1.17.2",
     "mongoose": "^5.13.5",
     "morgan": "^1.10.0",
-    "nodemon": "^2.0.12",
+    "nodemon": "^2.0.20",
     "spotify-web-api-node": "^5.0.2"
   },
   "name": "audio-vision",
