@@ -7,10 +7,7 @@ const app = require('express')()
 const morgan = require('morgan')
 const compression = require('compression')
 const SpotifyWebApi = require('spotify-web-api-node')
-const session = require('express-session')
-const MongoStore = require('connect-mongo')(session);
 const bodyParser = require('body-parser')
-const mongoose = require('mongoose')
 const cors = require('cors')
 const User = require('./User')
 
