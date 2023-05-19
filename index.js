@@ -3,39 +3,38 @@ require('dotenv').config()
 
 // import package dependencies listed in package.json > "dependencies"
 // as well as the "User" model
-const app = require('express')()
-const morgan = require('morgan')
-const compression = require('compression')
-const SpotifyWebApi = require('spotify-web-api-node')
-const bodyParser = require('body-parser')
-const cors = require('cors')
-const User = require('./User')
+const app = require('express')();
+const morgan = require('morgan');
+const compression = require('compression');
+const bodyParser = require('body-parser');
+const cors = require('cors');
+
+const SpotifyWebApi = require('spotify-web-api-node');
+
+const User = require('./User');
 
 //===================== ENV/CONFIG VARIABLES ===========================================
 // you can get client_id and client_secret from registering your app with Spotify
 // at developer.spotify.com/dashboard
 // then you will need to save them in a local .env file that is added to your .gitignore
-const client_id = process.env.CLIENT_ID
-const client_secret = process.env.CLIENT_SECRET
+const client_id = process.env.CLIENT_ID;
+const client_secret = process.env.CLIENT_SECRET;
 
 // the url for this redirect_uri must be added (or 'whitelisted') in settings of your app
 // and needs to match exactly any uri you will be redirecting to through your auth process
 // most of the troubleshooting I did seems to state the most common issue is that
 // users include or don't include a slash at the end of their URIs. These must match exactly.
-const redirect_uri = process.env.REDIRECT_URI
-const callback_url = process.env.CALLBACK_URL
-const session_secret = process.env.SESSION_SECRET
-const mongodb_uri = process.env.MONGODB_URI
-const is_secure = process.env.IS_SECURE
+const redirect_uri = process.env.REDIRECT_URI;
+const callback_url = process.env.CALLBACK_URL;
 
 // set port to 8888 if not specified (heroku can specify in deployment this way)
-const port = process.env.PORT
+const port = process.env.PORT;
 //====================================================================================
 
-app.use(morgan('combined'))
-app.use(cors())
-app.use(bodyParser.urlencoded({ extended: true }))
-app.use(bodyParser.json())
+app.use(morgan('combined'));
+app.use(cors());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
 
 // generate random string (function taken from spotify's tutorial) to use for state
@@ -51,14 +50,14 @@ let generateRandomString = function (length) {
 };
 
 // set scopes for what data the users must approve access to
-let scopes = ['user-read-private', 'user-read-email']
+let scopes = ['user-read-private', 'user-read-email'];
 
 // instantiate spotify-web-api-node module/package
 let spotifyApi = new SpotifyWebApi({
     clientId: client_id,
     clientSecret: client_secret,
     redirectUri: callback_url
-})
+});
 
 app.get(
     '/',
@@ -94,6 +93,7 @@ app.get(
             .then(data => {
                 console.log("DATA BODY: ", data.body)
                 // request.accessToken = data.body['access_token']
+                spotifyApi.setAccessToken(data.body['access_token']);
 
                 // successful authentication, redirect home
                 // putting access token in redirect url as search parameter to be used on front-end
@@ -120,7 +120,7 @@ app.get(
             clientId: `${client_id}`,
             clientSecret: `${client_secret}`,
             redirectUri: `${callback_url}`
-        })
+        });
 
         // let storedCollection = db.collection('sessions')
         // console.log("ID OF SESSION", request.sessionID)

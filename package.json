@@ -13,7 +13,6 @@
   "description": "A backend project that fetches track audio analysis data from Spotify's web API and serves it to a front-end application",
   "version": "1.0.0",
   "main": "index.js",
-  "devDependencies": {},
   "scripts": {
     "start": "nodemon index.js"
   },
